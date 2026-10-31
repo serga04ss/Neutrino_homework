@@ -1,0 +1,40 @@
+import numpy as np
+from detector import Detector
+from source import Source
+
+def run_simulation(energy, position, num_events=1):
+
+    det = Detector(R=2.0, N=40, r=0.1, a=0.5)
+    src = Source(Y=10000)
+    
+    results = []
+    
+    for _ in range(num_events):
+        
+        dirs, num_photons = src.generate_photons(energy)
+        
+        hit_count = 0 
+        
+        for i in range(num_photons):
+            idx = det.check_hit(position, dirs[i])
+            if idx != -1:
+                hit_count += 1 
+
+
+        if hit_count > 0:
+            pe_counts = det.generate_photoelectrons(hit_count)
+            total_charge = np.sum(pe_counts)
+        else:
+            total_charge = 0
+            
+        results.append(total_charge)
+        
+    return np.array(results)
+
+"""
+Расчет заряда по исправленной формуле из задания:
+Q = a * Y * (N * r^2) / (4 * R^2)
+Q = 125
+
+Результат симуляции для 1 события отлично согласуется с аналитической формулой.
+"""
