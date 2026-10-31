@@ -1,0 +1,23 @@
+import numpy as np
+
+class Source:
+    def __init__(self, Y=10000):
+        self.Y = Y
+
+    def generate_photons(self, energy):
+        
+        num_photons = int(self.Y * energy)
+        
+        # Для равномерного распределения по сфере косинус угла должен быть равномерным от -1 до 1
+        cos_theta = np.random.uniform(-1, 1, num_photons)
+        theta = np.arccos(cos_theta)
+        
+        phi = np.random.uniform(0, 2 * np.pi, num_photons)
+        
+        dx = np.sin(theta) * np.cos(phi)
+        dy = np.sin(theta) * np.sin(phi)
+        dz = np.cos(theta)
+        
+        directions = np.column_stack((dx, dy, dz))
+        
+        return directions, num_photons
