@@ -1,0 +1,77 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from detector import Detector
+from source import Source
+
+def run_experiment(energy, position, num_events, det, src):
+    charges = []
+    for _ in range(num_events):
+        dirs, num_photons = src.generate_photons(energy)
+        hit_count = sum(1 for i in range(num_photons) if det.check_hit(position, dirs[i]) != -1)
+        if hit_count > 0:
+            charges.append(np.sum(det.generate_photoelectrons(hit_count)))
+        else:
+            charges.append(0)
+    return np.array(charges)
+
+if __name__ == "__main__":
+
+    det = Detector(R=2.0, N=40, r=0.1, a=0.5)
+    src = Source(Y=10000)
+    center_pos = np.array([0.0, 0.0, 0.0])
+    
+    # ==========================================
+    # 1000 событий для 1 МэВ
+    # ==========================================
+    print("Моделирование 1000 событий (1 МэВ)...")
+    charges_1MeV = run_experiment(1.0, center_pos, 1000, det, src)
+    
+    print(f"   Среднее: {np.mean(charges_1MeV):.1f}, Отн. ширина: {np.std(charges_1MeV)/np.mean(charges_1MeV):.3f}")
+    
+    plt.figure(figsize=(8, 5))
+    plt.hist(charges_1MeV, bins=30, edgecolor='black', alpha=0.7, color='skyblue')
+    plt.title('Распределение заряда (1 МэВ, 1000 событий)')
+    plt.xlabel('Заряд (фотоэлектроны)')
+    plt.ylabel('Частота')
+    plt.grid(True, alpha=0.3)
+    plt.show()
+
+    # ==========================================
+    # Разные энергии 
+    # ==========================================
+    energies = [0.2, 0.5, 0.7, 1.5, 2.0, 3.0]
+    results = {}
+    
+    for E in energies:
+        res = run_experiment(E, center_pos, 1000, det, src)
+        results[E] = res
+        mean_val = np.mean(res)
+        std_val = np.std(res)
+        rel_width = std_val / mean_val
+        print(f"   Энергия {E:.1f} МэВ: Среднее = {mean_val:.1f}, Отн. ширина (std/mean) = {rel_width:.3f}")
+
+    # График наложения всех энергий
+    plt.figure(figsize=(10, 6))
+    for E, data in results.items():
+        plt.hist(data, bins=40, alpha=0.5, label=f'{E} МэВ')
+    plt.title('Распределение заряда для разных энергий')
+    plt.xlabel('Заряд (фотоэлектроны)')
+    plt.ylabel('Частота')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.show()
+
+    # ==========================================
+    # Смещение источника 
+    # ==========================================
+    shifted_pos = np.array([0.0, 0.0, 1.0])
+    
+    # Для 1 МэВ
+    charges_shifted = run_experiment(1.0, shifted_pos, 1000, det, src)
+    
+    mean_center = np.mean(charges_1MeV)
+    mean_shifted = np.mean(charges_shifted)
+    
+    print(f"   Среднее в центре (0,0,0): {mean_center:.1f}")
+    print(f"   Среднее со сдвигом (0,0,1): {mean_shifted:.1f}")
+    print(f"   Изменение: {((mean_shifted - mean_center) / mean_center) * 100:.1f}%")
