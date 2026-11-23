@@ -7,9 +7,10 @@ class Detector:
         self.r = r
         self.a = a
         
-        # Точки равномерно по поверхности сферы
-        z = np.random.uniform(-self.R, self.R, N)
-        phi = np.random.uniform(0, 2 * np.pi, N)
+        # Точки равномерно по поверхности сферы (спираль Фибоначчи)
+        indices = np.arange(N) + 0.5 # Сдвиг от полюсов
+        z = self.R * (1 - 2 * indices / N)
+        phi = np.pi * (3 - np.sqrt(5)) * indices # Золотой угол
         
         # Радиус окружности в сечении
         r_xy = np.sqrt(self.R**2 - z**2)
